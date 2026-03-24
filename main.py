@@ -1,6 +1,7 @@
 # main.py
 
 import os
+import sys
 import tkinter as tk
 from tkinter import ttk
 from game import Game
@@ -8,12 +9,20 @@ from data import CLASSES, LOCATIONS, SHOP_ITEMS, GENERAL_STORE_ITEMS, COMPANIONS
 from PIL import Image, ImageTk
 
 
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 class SluiceBoxJunkyApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Sluice Box Junky")
-        self.root.geometry("1420x860")
+        self.root.geometry("1000x700")
+        self.root.minsize(800, 600)
 
         self.game = Game()
 
@@ -38,6 +47,8 @@ class SluiceBoxJunkyApp:
         self.equipment_label = None
         self.buff_label = None
         self.result_label = None
+        self.storage_listbox = None
+        self.cooler_listbox = None
         self.loot_log = None
         self.inventory_text = None
         self.cooler_text = None
@@ -69,7 +80,11 @@ class SluiceBoxJunkyApp:
     
     def load_tk_image(self, path, size=(180, 300)):
         fallback = "assets/honeys/placeholder.png"
-        final_path = path if os.path.exists(path) else fallback
+
+        resolved_path = resource_path(path)
+        resolved_fallback = resource_path(fallback)
+
+        final_path = resolved_path if os.path.exists(resolved_path) else resolved_fallback
 
         if not os.path.exists(final_path):
             return None
@@ -200,8 +215,37 @@ class SluiceBoxJunkyApp:
         )
 
     def build_game_ui(self):
-        self.game_frame = ttk.Frame(self.root, padding=10)
-        self.game_frame.pack(fill="both", expand=True)
+        container = ttk.Frame(self.root)
+        container.pack(fill="both", expand=True)
+
+        canvas = tk.Canvas(container, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
+
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        self.game_frame = ttk.Frame(canvas, padding=10)
+
+        canvas_window = canvas.create_window(
+            (0, 0),
+            window=self.game_frame,
+            anchor="nw"
+    )
+
+        def _update_scrollregion(event):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+
+        def _resize_frame_to_canvas(event):
+            canvas.itemconfigure(canvas_window, width=event.width)
+
+        self.game_frame.bind("<Configure>", _update_scrollregion)
+        canvas.bind("<Configure>", _resize_frame_to_canvas)
+
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        canvas.configure(yscrollcommand=scrollbar.set)
 
         ttk.Label(
             self.game_frame,
@@ -369,79 +413,81 @@ class SluiceBoxJunkyApp:
         self.gear_text = tk.Text(gear_frame, height=14, state="disabled", wrap="word")
         self.gear_text.pack(fill="both", expand=True)
 
-        honey_frame = ttk.LabelFrame(left, text="Equipped Sluice Box Honey", padding=10)
-        honey_frame.pack(fill="x", pady=(0, 10))
-
-        self.honey_inventory_image_label = ttk.Label(honey_frame, text="No image loaded")
-        self.honey_inventory_image_label.pack(pady=5)
-
-        self.honey_status_label = ttk.Label(honey_frame, text="", justify="left")
-        self.honey_status_label.pack(anchor="w")
-
         storage_frame = ttk.LabelFrame(middle, text="Home Storage Consumables", padding=10)
         storage_frame.pack(fill="both", expand=True)
 
-        self.storage_text = tk.Text(
+        self.storage_listbox = tk.Listbox(storage_frame, height=18, exportselection=False)
+        self.storage_listbox.pack(fill="both", expand=True, pady=(0, 10))
+
+        ttk.Button(
             storage_frame,
-            width=38,
-            height=24,
-            state="disabled",
-            wrap="word"
-        )
-        self.storage_text.pack(fill="both", expand=True)
+            text="Pack Selected → Cooler",
+            command=self.pack_selected_to_cooler
+        ).pack(fill="x")
 
-        for index in range(8):
-            ttk.Button(
-                storage_frame,
-                text=f"Pack Storage Slot {index + 1} → Cooler",
-                command=lambda i=index: self.pack_to_cooler(i)
-            ).pack(fill="x", pady=2)
+        cooler_frame = ttk.LabelFrame(right, text="Cooler Loadout", padding=10)
+        cooler_frame.pack(fill="both", expand=True)
 
-        inv_cooler_frame = ttk.LabelFrame(right, text="Cooler Loadout", padding=10)
-        inv_cooler_frame.pack(fill="both", expand=True)
+        self.cooler_listbox = tk.Listbox(cooler_frame, height=18, exportselection=False)
+        self.cooler_listbox.pack(fill="both", expand=True, pady=(0, 10))
 
-        self.cooler_text_inventory = tk.Text(
-            inv_cooler_frame,
-            width=38,
-            height=24,
-            state="disabled",
-            wrap="word"
-        )
-        self.cooler_text_inventory.pack(fill="both", expand=True)
-
-        for index in range(8):
-            ttk.Button(
-                inv_cooler_frame,
-                text=f"Unload Cooler Slot {index + 1} → Storage",
-                command=lambda i=index: self.unpack_to_storage(i)
-            ).pack(fill="x", pady=2)
+        ttk.Button(
+            cooler_frame,
+            text="← Move Selected Back to Storage",
+            command=self.move_selected_to_storage
+        ).pack(fill="x")
 
     def build_store_tab(self, parent):
+        parent.columnconfigure(0, weight=2)
+        parent.columnconfigure(1, weight=2)
+        parent.columnconfigure(2, weight=1)
+        parent.rowconfigure(0, weight=1)
+
         left = ttk.Frame(parent)
-        left.pack(side="left", fill="both", expand=True, padx=(0, 10))
+        left.grid(row=0, column=0, sticky="nsew", padx=(0, 10))
 
         middle = ttk.Frame(parent)
-        middle.pack(side="left", fill="both", expand=True, padx=(0, 10))
+        middle.grid(row=0, column=1, sticky="nsew", padx=(0, 10))
 
         right = ttk.Frame(parent)
-        right.pack(side="left", fill="both", expand=True)
+        right.grid(row=0, column=2, sticky="nsew")
+
+        left.columnconfigure(0, weight=1)
+        left.columnconfigure(1, weight=1)
 
         gear_shop_frame = ttk.LabelFrame(left, text="Gear Store", padding=10)
-        gear_shop_frame.pack(fill="both", expand=True)
+        gear_shop_frame.grid(row=0, column=0, columnspan=2, sticky="nsew")
 
-        for category, items in SHOP_ITEMS.items():
-            cat_frame = ttk.LabelFrame(gear_shop_frame, text=category, padding=8)
+        gear_inner_left = ttk.Frame(gear_shop_frame)
+        gear_inner_left.pack(side="left", fill="both", expand=True, padx=(0, 8))
+
+        gear_inner_right = ttk.Frame(gear_shop_frame)
+        gear_inner_right.pack(side="left", fill="both", expand=True)
+
+        categories = list(SHOP_ITEMS.items())
+        left_categories = categories[:2]
+        right_categories = categories[2:]
+
+        for category, items in left_categories:
+            cat_frame = ttk.LabelFrame(gear_inner_left, text=category, padding=8)
             cat_frame.pack(fill="x", pady=6)
 
             for item in items:
-                if category == "Coolers":
-                    line = (
-                        f"{item['name']} - ${item['cost']}\n"
-                        f"Consumable Slots: {item['consumable_slots']}\n"
-                        f"{item['description']}"
-                    )
-                else:
-                    line = f"{item['name']} - ${item['cost']}\n{item['description']}"
+                line = self.format_store_item_text(category, item)
+
+                ttk.Label(cat_frame, text=line, justify="left").pack(anchor="w")
+                ttk.Button(
+                    cat_frame,
+                    text=f"Buy / Equip {item['name']}",
+                    command=lambda c=category, n=item["name"]: self.buy_shop_item(c, n)
+                ).pack(anchor="w", pady=(0, 6))
+
+        for category, items in right_categories:
+            cat_frame = ttk.LabelFrame(gear_inner_right, text=category, padding=8)
+            cat_frame.pack(fill="x", pady=6)
+
+            for item in items:
+                line = self.format_store_item_text(category, item)
 
                 ttk.Label(cat_frame, text=line, justify="left").pack(anchor="w")
                 ttk.Button(
@@ -454,7 +500,7 @@ class SluiceBoxJunkyApp:
         general_store_frame.pack(fill="both", expand=True)
 
         for item in GENERAL_STORE_ITEMS:
-            line = f"{item['name']} - ${item['cost']}\n{item['description']}"
+            line = self.format_general_store_item_text(item)
             ttk.Label(general_store_frame, text=line, justify="left").pack(anchor="w")
             ttk.Button(
                 general_store_frame,
@@ -463,7 +509,7 @@ class SluiceBoxJunkyApp:
             ).pack(anchor="w", pady=(0, 8))
 
         companion_store_frame = ttk.LabelFrame(right, text="Companions", padding=10)
-        companion_store_frame.pack(fill="x", pady=5)
+        companion_store_frame.pack(fill="both", expand=True)
 
         for companion in COMPANIONS:
             bonus_parts = []
@@ -490,9 +536,8 @@ class SluiceBoxJunkyApp:
                 command=lambda n=companion["name"]: self.buy_companion(n)
             ).pack(anchor="w", pady=(0, 8))
 
-
         self.store_status_label = ttk.Label(parent, text="")
-        self.store_status_label.pack(side="bottom", fill="x", pady=(10, 0))
+        self.store_status_label.grid(row=1, column=0, columnspan=3, sticky="ew", pady=(10, 0))
 
     def build_honey_tab(self, parent):
         left = ttk.Frame(parent)
@@ -697,6 +742,7 @@ class SluiceBoxJunkyApp:
     def update_cooler_display(self):
         hero = self.game.hero
 
+    # River tab text widget
         self.cooler_text.config(state="normal")
         self.cooler_text.delete("1.0", "end")
 
@@ -707,40 +753,40 @@ class SluiceBoxJunkyApp:
                 self.cooler_text.insert(
                     "end",
                     f"{index}. {item['name']}\n   {item['description']}\n\n"
-                )
+            )
 
         self.cooler_text.config(state="disabled")
 
-        self.cooler_text_inventory.config(state="normal")
-        self.cooler_text_inventory.delete("1.0", "end")
+    # Inventory tab listbox
+        if self.cooler_listbox is not None:
+            self.cooler_listbox.delete(0, tk.END)
 
-        if not hero.cooler_consumables:
-            self.cooler_text_inventory.insert("end", "No cooler items packed.\n")
-        else:
-            for index, item in enumerate(hero.cooler_consumables, start=1):
-                self.cooler_text_inventory.insert(
-                    "end",
-                    f"{index}. {item['name']}\n   {item['description']}\n\n"
+            if not hero.cooler_consumables:
+                self.cooler_listbox.insert(tk.END, "[Cooler is empty]")
+            else:
+                for item in hero.cooler_consumables:
+                    self.cooler_listbox.insert(
+                        tk.END,
+                        f"{item['name']} - {item['description']}"
                 )
-
-        self.cooler_text_inventory.config(state="disabled")
 
     def update_storage_display(self):
         hero = self.game.hero
 
-        self.storage_text.config(state="normal")
-        self.storage_text.delete("1.0", "end")
+        if self.storage_listbox is None:
+            return
+
+        self.storage_listbox.delete(0, tk.END)
 
         if not hero.storage_consumables:
-            self.storage_text.insert("end", "Home storage is empty.\n")
-        else:
-            for index, item in enumerate(hero.storage_consumables, start=1):
-                self.storage_text.insert(
-                    "end",
-                    f"{index}. {item['name']}\n   {item['description']}\n\n"
-                )
+            self.storage_listbox.insert(tk.END, "[Storage is empty]")
+            return
 
-        self.storage_text.config(state="disabled")
+        for item in hero.storage_consumables:
+            self.storage_listbox.insert(
+                tk.END,
+                f"{item['name']} - {item['description']}"
+            )
 
     def update_gear_display(self):
         hero = self.game.hero
@@ -844,6 +890,27 @@ class SluiceBoxJunkyApp:
         self.sell_button.config(state=disabled)
         self.rest_button.config(state=disabled)
 
+    def pack_selected_to_cooler(self):
+        selection = self.storage_listbox.curselection()
+        if not selection:
+            self.show_message("Select an item in storage first.")
+            return
+
+        index = selection[0]
+        result = self.game.move_storage_to_cooler(index)
+        self.show_message(result["message"])
+
+
+    def move_selected_to_storage(self):
+        selection = self.cooler_listbox.curselection()
+        if not selection:
+            self.show_message("Select an item in the cooler first.")
+            return
+
+        index = selection[0]
+        result = self.game.move_cooler_to_storage(index)
+        self.show_message(result["message"])
+
     def show_message(self, message):
         self.result_label.config(text=message)
         if self.store_status_label is not None:
@@ -857,6 +924,47 @@ class SluiceBoxJunkyApp:
         self.show_message(
             f"You head toward {selected_location}. Hope, mud, and poor decisions await."
         )
+    
+    def format_store_item_text(self, category, item):
+        if category == "Pans":
+            stats = f"Luck Bonus: +{item['luck_bonus']}"
+        elif category == "Containers":
+            stats = f"Inventory Capacity: +{item['capacity_bonus']}"
+        elif category == "Boots":
+            stats = f"Stamina Cost Reduction: -{item['stamina_reduction']}"
+        elif category == "Coolers":
+            total_slots = 2 + item["consumable_slots"]
+            stats = (
+                f"Cooler Slots Added: +{item['consumable_slots']}\n"
+                f"Total Cooler Capacity: {total_slots}"
+            )
+        else:
+            stats = "No stats"
+
+        return (
+            f"{item['name']} - ${item['cost']}\n"
+            f"{item['description']}\n"
+            f"{stats}"
+    )
+
+
+    def format_general_store_item_text(self, item):
+        effect = "No effect listed"
+
+        if item["type"] == "stamina":
+            effect = f"Restores {item['value']} stamina"
+        elif item["type"] == "luck_buff":
+            effect = f"+{item['value']} luck for {item['duration']} pans"
+        elif item["type"] == "sell_buff":
+            effect = f"+{int(item['value'] * 100)}% on next sale"
+        elif item["type"] == "requirement":
+            effect = "Used to satisfy special honey requirements"
+
+        return (
+            f"{item['name']} - ${item['cost']}\n"
+            f"{item['description']}\n"
+            f"Effect: {effect}"
+    )
 
     def start_pan(self):
         if self.game.game_over:
@@ -902,14 +1010,6 @@ class SluiceBoxJunkyApp:
 
     def use_cooler_consumable(self, index):
         result = self.game.use_cooler_consumable(index)
-        self.show_message(result["message"])
-
-    def pack_to_cooler(self, index):
-        result = self.game.move_storage_to_cooler(index)
-        self.show_message(result["message"])
-
-    def unpack_to_storage(self, index):
-        result = self.game.move_cooler_to_storage(index)
         self.show_message(result["message"])
 
 

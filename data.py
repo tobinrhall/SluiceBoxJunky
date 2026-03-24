@@ -200,7 +200,7 @@ SHOP_ITEMS = {
         {
             "name": "Lunch Cooler",
             "cost": 0,
-            "consumable_slots": 1,
+            "consumable_slots": 2,
             "description": "One sad drink and a dream."
         },
         {

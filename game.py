@@ -25,6 +25,7 @@ class Hero:
         self.equipped_honey = None
         self.owned_honeys = set()
         self.base_capacity = 10
+        self.base_cooler_capacity = 2
         self.inventory = []
 
         self.storage_consumables = []
@@ -79,7 +80,7 @@ class Hero:
             + companion_capacity
         )
 
-        self.cooler_capacity = self.equipped_cooler["consumable_slots"]
+        self.cooler_capacity = self.base_cooler_capacity + self.equipped_cooler["consumable_slots"]
         self.max_stamina = (
             self.base_max_stamina
                 + CLASSES[self.hero_class]["max_stamina_bonus"]
