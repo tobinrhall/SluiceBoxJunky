@@ -29,6 +29,9 @@ class SluiceBoxJunkyApp:
         self.creation_frame = None
         self.game_frame = None
         self.notebook = None
+        self.river_container = None
+
+        self.selected_class_label = None
 
         self.name_entry = None
         self.story_text = None
@@ -58,15 +61,17 @@ class SluiceBoxJunkyApp:
         self.store_status_label = None
         self.tabs = {}
         self.nav_buttons = {}
+        self.current_river_image_label = None
         self.current_tab_name = "River"
 
         self.tab_colors = {
-            "River": "#1f3b73",
+            "Rivers": "#1f3b73",
+            "Panning": "#2f5d50",
             "Inventory / Gear": "#d4af37",
             "Store": "#8b1e1e",
             "Sluice Box Honeys": "#09eb41"
         }
-        self.honey_image_refs = {}
+        self.image_refs = {}
         self.honey_inventory_image_label = None
         self.honey_status_label = None
         self.honey_notes_text = None
@@ -96,6 +101,79 @@ class SluiceBoxJunkyApp:
         except Exception:
             return None
         
+    def render_river_cards(self):
+        if self.river_container is None:
+            return
+
+        for widget in self.river_container.winfo_children():
+            widget.destroy()
+
+        unlocked = set(self.game.get_unlocked_locations())
+
+        columns = 2
+        row = 0
+        col = 0
+
+        for name in self.game.get_all_locations_in_order():
+            data = LOCATIONS[name]
+            is_unlocked = name in unlocked
+
+            card = ttk.LabelFrame(self.river_container, text=name, padding=8)
+            card.grid(row=row, column=col, padx=8, pady=8, sticky="nsew")
+
+            img = self.load_tk_image(data.get("image", "assets/rivers/placeholder.png"), size=(220, 140))
+            if img is not None:
+                label = ttk.Label(card, image=img)
+                label.image = img
+                label.pack()
+            else:
+                ttk.Label(card, text="[No Image]").pack()
+
+            ttk.Label(
+                card,
+                text=data.get("description", ""),
+                wraplength=220,
+                justify="center"
+            ).pack(pady=(6, 6))
+
+        # Optional helpful info
+            stamina_cost = data.get("stamina_cost", "?")
+            ttk.Label(
+                card,
+                text=f"Pan Cost: {stamina_cost} stamina",
+                justify="center"
+            ).pack(pady=(0, 6))
+
+            if is_unlocked:
+                ttk.Button(
+                    card,
+                    text="Go Panning",
+                    command=lambda n=name: self.select_river(n)
+                ).pack()
+            else:
+                ttk.Label(
+                    card,
+                    text="🔒 Locked",
+                    foreground="red",
+                    font=("Arial", 10, "bold")
+                ).pack()
+                ttk.Label(
+                    card,
+                    text="Unlock by bailing Cletus out again.",
+                    justify="center"
+                ).pack(pady=(4, 0))
+
+            col += 1
+            if col >= columns:
+                col = 0
+                row += 1
+
+    def select_river(self, river_name):
+        self.game.set_location(river_name)
+        self.location_var.set(river_name)
+        self.show_message(f"You travel to {river_name}.")
+        self.select_tab("Panning")
+
     def setup_notebook_style(self):
         style = ttk.Style()
         style.theme_use("clam")
@@ -107,7 +185,7 @@ class SluiceBoxJunkyApp:
         tab_bar = tk.Frame(parent, bg="#1a1a1a", bd=2, relief="ridge")
         tab_bar.pack(fill="x", pady=(0, 10))
 
-        tab_order = ["River", "Inventory / Gear", "Store", "Sluice Box Honeys"]
+        tab_order = ["Rivers", "Panning", "Inventory / Gear", "Store", "Sluice Box Honeys"]
 
         for tab_name in tab_order:
             bg_color = self.tab_colors[tab_name]
@@ -147,11 +225,32 @@ class SluiceBoxJunkyApp:
         self.creation_frame = ttk.Frame(self.root, padding=20)
         self.creation_frame.pack(fill="both", expand=True)
 
+        style = ttk.Style()
+        style.configure(
+            "Start.TButton",
+            font=("Arial", 14, "bold"),
+            padding=(20, 10)
+        )
+
         ttk.Label(
             self.creation_frame,
             text="Sluice Box Junky",
             font=("Arial", 24, "bold")
         ).pack(pady=(5, 15))
+
+        top_bar = ttk.Frame(self.creation_frame)
+        top_bar.pack(fill="x", pady=(0, 15))
+
+        button_container = ttk.Frame(top_bar)
+        button_container.pack()
+
+        self.start_button = ttk.Button(
+            button_container,
+            text="▶ START",
+            command=self.start_game,
+            style="Start.TButton"
+        )
+        self.start_button.pack()
 
         top_area = ttk.Frame(self.creation_frame)
         top_area.pack(fill="both", expand=True)
@@ -179,19 +278,14 @@ class SluiceBoxJunkyApp:
         class_frame = ttk.LabelFrame(left, text="Choose Your Class", padding=15)
         class_frame.pack(fill="x", pady=10)
 
-        for class_name, class_data in CLASSES.items():
-            ttk.Radiobutton(
-                class_frame,
-                text=f"{class_name} - {class_data['description']}",
-                variable=self.class_var,
-                value=class_name
-            ).pack(anchor="w", pady=4)
+        self.build_class_selection(class_frame)
 
-        ttk.Button(
-            left,
-            text="Start Digging",
-            command=self.start_game
-        ).pack(pady=20, anchor="w")
+        self.selected_class_label = ttk.Label(
+            class_frame,
+            text="Selected: Greenhorn",
+            font=("Arial", 11, "bold")
+        )
+        self.selected_class_label.pack(pady=8)
 
         story_frame = ttk.LabelFrame(right, text=GAME_STORY["title"], padding=10)
         story_frame.pack(fill="both", expand=True)
@@ -200,10 +294,62 @@ class SluiceBoxJunkyApp:
         self.story_text.insert("1.0", GAME_STORY["intro"])
         self.story_text.config(state="disabled")
         self.story_text.pack(fill="both", expand=True)
+        
+    def build_class_selection(self, parent):
+        self.selected_class = tk.StringVar(value="Greenhorn")
+
+        container = ttk.Frame(parent)
+        container.pack()
+
+        columns = 2
+        row = 0
+        col = 0
+
+        for class_name, data in CLASSES.items():
+            card = ttk.Frame(container, relief="ridge", padding=10)
+            card.grid(row=row, column=col, padx=10, pady=10)
+
+            img = self.load_tk_image(data["image"], size=(200, 200))
+            if img:
+                self.image_refs[class_name] = img
+                label = ttk.Label(card, image=img)
+                label.pack()
+
+            ttk.Label(
+                card,
+                text=class_name,
+                font=("Arial", 12, "bold")
+            ).pack()
+
+            ttk.Label(
+                card,
+                text=data["description"],
+                wraplength=200,
+                justify="center"
+            ).pack(pady=5)
+
+            ttk.Label(
+                card,
+                text=(
+                    f"Luck +{data['luck_bonus']} | "
+                    f"Stamina {data['max_stamina_bonus']:+d}"
+                ),
+            ).pack()
+
+            ttk.Button(
+                card,
+                text="Select",
+                command=lambda c=class_name: self.select_class(c)
+            ).pack(pady=5)
+
+            col += 1
+            if col >= columns:
+                col = 0
+                row += 1
 
     def start_game(self):
         hero_name = self.name_entry.get()
-        hero_class = self.class_var.get()
+        hero_class = self.selected_class.get()
 
         self.game.create_hero(hero_name, hero_class)
 
@@ -213,6 +359,12 @@ class SluiceBoxJunkyApp:
         self.log_message(
             f"{self.game.hero.name} the {self.game.hero.hero_class} hits the dirt running."
         )
+
+    def select_class(self, class_name):
+        self.selected_class.set(class_name)
+        if self.selected_class_label is not None:
+            self.selected_class_label.config(text=f"Selected: {class_name}")
+
 
     def build_game_ui(self):
         container = ttk.Frame(self.root)
@@ -259,31 +411,49 @@ class SluiceBoxJunkyApp:
         self.notebook = ttk.Notebook(self.game_frame, style="Hidden.TNotebook")
         self.notebook.pack(fill="both", expand=True)
 
-        river_tab = ttk.Frame(self.notebook, padding=10)
+        rivers_tab = ttk.Frame(self.notebook, padding=10)
+        panning_tab = ttk.Frame(self.notebook, padding=10)
         inventory_tab = ttk.Frame(self.notebook, padding=10)
         store_tab = ttk.Frame(self.notebook, padding=10)
         honey_tab = ttk.Frame(self.notebook, padding=10)
 
         self.tabs = {
-            "River": river_tab,
+            "Rivers": rivers_tab,
+            "Panning": panning_tab,
             "Inventory / Gear": inventory_tab,
             "Store": store_tab,
             "Sluice Box Honeys": honey_tab
         }
 
-        self.notebook.add(river_tab, text="River")
+        self.notebook.add(rivers_tab, text="Rivers")
+        self.notebook.add(panning_tab, text="Panning")
         self.notebook.add(inventory_tab, text="Inventory / Gear")
         self.notebook.add(store_tab, text="Store")
         self.notebook.add(honey_tab, text="Sluice Box Honeys")
 
-        self.build_river_tab(river_tab)
+        self.build_rivers_tab(rivers_tab)
+        self.build_panning_tab(panning_tab)
         self.build_inventory_tab(inventory_tab)
         self.build_store_tab(store_tab)
         self.build_honey_tab(honey_tab)
 
-        self.select_tab("River")
+        self.select_tab("Rivers")
 
-    def build_river_tab(self, parent):
+
+    def build_rivers_tab(self, parent):
+        title = ttk.Label(
+            parent,
+            text="Choose Your River",
+            font=("Arial", 16, "bold")
+        )
+        title.pack(pady=(0, 10))
+
+        self.river_container = ttk.Frame(parent)
+        self.river_container.pack(fill="both", expand=True)
+
+        self.render_river_cards()
+    
+    def build_panning_tab(self, parent):
         left = ttk.Frame(parent)
         left.pack(side="left", fill="both", expand=True, padx=(0, 10))
 
@@ -308,6 +478,9 @@ class SluiceBoxJunkyApp:
         self.location_flavor_label = ttk.Label(info_frame, text="")
         self.location_flavor_label.pack(anchor="w", pady=(0, 5))
 
+        self.current_river_image_label = ttk.Label(info_frame, text="[River Image]")
+        self.current_river_image_label.pack(anchor="w", pady=(5, 10))
+
         self.stamina_label = ttk.Label(info_frame, text="")
         self.stamina_label.pack(anchor="w")
 
@@ -326,17 +499,14 @@ class SluiceBoxJunkyApp:
         self.buff_label = ttk.Label(info_frame, text="", justify="left")
         self.buff_label.pack(anchor="w", pady=(0, 10))
 
-        location_frame = ttk.LabelFrame(left, text="Choose Location", padding=10)
-        location_frame.pack(fill="x", pady=10)
+        current_spot_frame = ttk.LabelFrame(left, text="Current River", padding=10)
+        current_spot_frame.pack(fill="x", pady=10)
 
-        location_menu = ttk.OptionMenu(
-            location_frame,
-            self.location_var,
-            self.game.current_location,
-            *LOCATIONS.keys(),
-            command=self.change_location
-        )
-        location_menu.pack(anchor="w")
+        ttk.Label(
+            current_spot_frame,
+            textvariable=self.location_var,
+            font=("Arial", 12, "bold")
+        ).pack(anchor="w")
 
         button_frame = ttk.Frame(left)
         button_frame.pack(pady=10)
@@ -354,11 +524,17 @@ class SluiceBoxJunkyApp:
             button_frame,
             text="Pay Toward Bail",
             command=self.pay_bail
-)
+        )
         self.pay_bail_button.pack(side="left", padx=5)
 
-        self.result_label = ttk.Label(left, text="The river awaits...", font=("Arial", 11))
-        self.result_label.pack(pady=10)
+        self.result_label = ttk.Label(
+            left,
+            text="The river awaits...",
+            font=("Arial", 11),
+            justify="left",
+            wraplength=600
+)
+        self.result_label.pack(pady=10, anchor="w")
 
         log_frame = ttk.LabelFrame(left, text="Loot Log", padding=10)
         log_frame.pack(fill="both", expand=True)
@@ -464,7 +640,10 @@ class SluiceBoxJunkyApp:
         gear_inner_right = ttk.Frame(gear_shop_frame)
         gear_inner_right.pack(side="left", fill="both", expand=True)
 
-        categories = list(SHOP_ITEMS.items())
+        categories = [
+            (category, self.game.get_available_shop_items(category))
+            for category in SHOP_ITEMS
+    ]
         left_categories = categories[:2]
         right_categories = categories[2:]
 
@@ -584,7 +763,7 @@ class SluiceBoxJunkyApp:
             img = self.load_tk_image(honey.get("image", "assets/honeys/placeholder.png"))
 
             if img is not None:
-                self.honey_image_refs[honey["name"]] = img
+                self.image_refs[honey["name"]] = img
                 tk.Label(top_row, image=img, bg="#2b2b2b").pack(side="left", padx=8, pady=4)
             else:
                 tk.Label(top_row, text="[No Image]", bg="#2b2b2b", fg="white").pack(side="left", padx=8)
@@ -650,7 +829,20 @@ class SluiceBoxJunkyApp:
         self.location_label.config(
             text=f"Location: {self.game.current_location} | Pan Cost: {self.game.get_pan_cost()} stamina"
         )
-        self.location_flavor_label.config(text=f"Area Notes: {location_data['flavor']}")
+        self.location_flavor_label.config(
+            text=f"Area Notes: {location_data.get('description', location_data.get('flavor', ''))}"
+        )
+        river_image = self.load_tk_image(
+            location_data.get("image", "assets/rivers/placeholder.png"),
+            size=(280, 170)
+        )
+
+        if river_image is not None:
+            self.image_refs["current_river"] = river_image
+            self.current_river_image_label.config(image=river_image, text="")
+        else:
+            self.current_river_image_label.config(image="", text="[No River Image]")
+
         self.stamina_label.config(text=f"Stamina: {hero.stamina}/{hero.max_stamina}")
         self.gold_label.config(
             text=f"Cash: ${hero.cash}\nBail Paid: ${hero.bail_paid}"
@@ -670,7 +862,9 @@ class SluiceBoxJunkyApp:
 
         self.progress_label.config(
             text=(
+                f"Cletus Arrest Stage: {self.game.get_current_stage_number()}\n"
                 f"Bail Goal: ${self.game.bail_target}\n"
+                f"Bail Paid: ${hero.bail_paid}\n"
                 f"Bail Remaining: ${bail_remaining}\n"
                 f"Daily Expense: ${self.game.daily_expense}\n"
                 f"Run Status: {state_text}"
@@ -849,7 +1043,7 @@ class SluiceBoxJunkyApp:
     )
 
         if image is not None:
-            self.honey_image_refs["inventory_honey"] = image
+            self.image_refs["inventory_honey"] = image
             self.honey_inventory_image_label.config(image=image, text="")
         else:
             self.honey_inventory_image_label.config(image="", text="[No Image]")
@@ -991,6 +1185,7 @@ class SluiceBoxJunkyApp:
     def pay_bail(self):
         result = self.game.pay_bail()
         self.show_message(result["message"])
+        self.render_river_cards()
 
     def buy_shop_item(self, category, item_name):
         result = self.game.buy_item(category, item_name)

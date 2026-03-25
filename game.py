@@ -1,8 +1,21 @@
 # game.py
 
 import random
-from data import LOCATIONS, CLASSES, SHOP_ITEMS, GENERAL_STORE_ITEMS, COMPANIONS, SLUICE_HONEYS, GAME_BALANCE
-
+from data import (
+    LOCATIONS,
+    CLASSES,
+    SHOP_ITEMS,
+    GENERAL_STORE_ITEMS,
+    COMPANIONS,
+    SLUICE_HONEYS,
+    GAME_BALANCE,
+    BAIL_STAGES,
+    RIVER_UNLOCK_ORDER,
+    CLETUS_REARREST_EVENTS,
+    WORLD_EVENT_SETTINGS,
+    WORLD_EVENTS,
+    DEBBIE_COMPLAINTS,
+)
 
 class Hero:
     def __init__(self, name="Unnamed Prospector", hero_class="River Rat"):
@@ -193,10 +206,15 @@ class Hero:
 class Game:
     def __init__(self):
         self.hero = None
-        self.current_location = "Nooksack River"
         self.day = 1
-        self.bail_target = GAME_BALANCE["starting_bail"]
+
+        self.bail_stage = 0
+        self.bail_target = BAIL_STAGES[self.bail_stage]
         self.daily_expense = GAME_BALANCE["daily_expense"]
+
+        self.unlocked_locations = set(RIVER_UNLOCK_ORDER[:3])
+        self.current_location = RIVER_UNLOCK_ORDER[0]
+
         self.game_over = False
         self.game_won = False
 
@@ -204,17 +222,83 @@ class Game:
         clean_name = name.strip() if name.strip() else "Unnamed Prospector"
         self.hero = Hero(clean_name, hero_class)
 
+    def get_all_locations_in_order(self):
+        return RIVER_UNLOCK_ORDER
+
+    def get_current_stage_number(self):
+        return self.bail_stage + 1
+
+    def is_location_unlocked(self, location_name):
+        return location_name in self.unlocked_locations
+
+    def get_unlocked_locations(self):
+        return [name for name in RIVER_UNLOCK_ORDER if name in self.unlocked_locations]
+
+    def get_available_shop_items(self, category):
+        current_stage = self.get_current_stage_number()
+        return [
+            item for item in SHOP_ITEMS[category]
+            if item.get("required_stage", 1) <= current_stage
+        ]
+
+
+    def check_fail_state(self):
+        if self.hero is None:
+            return
+
+        if self.hero.cash < -250:
+            self.game_over = True
+            self.game_won = False
+
+    def advance_bail_progression(self):
+        unlocked_message = ""
+        river_message = ""
+
+        if len(self.unlocked_locations) < len(RIVER_UNLOCK_ORDER):
+            next_river = RIVER_UNLOCK_ORDER[len(self.unlocked_locations)]
+            self.unlocked_locations.add(next_river)
+            unlocked_message = f"\nNew River Unlocked: {next_river}"
+
+        rearrest_message = random.choice(CLETUS_REARREST_EVENTS)
+
+        self.bail_stage += 1
+
+        if self.bail_stage >= len(BAIL_STAGES):
+            self.game_won = True
+            self.game_over = True
+            return (
+                "Against all odds, you finally cleared Cletus's mountain of legal trouble."
+                "\n\nCletus is free."
+                "\n\nFor now."
+            )
+
+        self.bail_target = BAIL_STAGES[self.bail_stage]
+        self.hero.bail_paid = 0
+
+        river_message = unlocked_message if unlocked_message else ""
+
+        return (
+            f"You paid off Cletus's bail for this round."
+            f"\n\n{rearrest_message}"
+            f"{river_message}"
+            f"\n\nNew Bail Target: ${self.bail_target}"
+        )
+
     def get_location_data(self):
         return LOCATIONS[self.current_location]
 
     def set_location(self, location_name):
-        if location_name in LOCATIONS and not self.game_over:
+        if self.game_over:
+            return
+
+        if location_name in LOCATIONS and location_name in self.unlocked_locations:
             self.current_location = location_name
 
     def get_bail_remaining(self):
         if self.hero is None:
             return self.bail_target
         return max(0, self.bail_target - self.hero.bail_paid)
+    
     def pay_bail(self, amount=None):
         if self.hero is None:
             return {"success": False, "message": "No hero created yet."}
@@ -228,19 +312,25 @@ class Game:
         if amount is None:
             amount = self.hero.cash
 
-        amount = min(amount, self.hero.cash)
+        amount = min(amount, self.hero.cash, self.get_bail_remaining())
 
         self.hero.cash -= amount
         self.hero.bail_paid += amount
 
         if self.hero.bail_paid >= self.bail_target:
-            self.game_won = True
-            self.game_over = True
+            progression_message = self.advance_bail_progression()
+            return {
+                "success": True,
+                "message": f"You pay ${amount} toward Cletus's bail.\n\n{progression_message}"
+            }
 
         return {
             "success": True,
-            "message": f"You pay ${amount} toward Cletus's bail."
-    }
+            "message": (
+                f"You pay ${amount} toward Cletus's bail."
+                f"\nBail Remaining: ${self.get_bail_remaining()}"
+            )
+        }
 
     def check_win_loss(self):
         if self.hero is None:
@@ -304,16 +394,28 @@ class Game:
         if self.hero.equipped_companion is not None:
             companion_note = f" {self.hero.equipped_companion['name']} seems pleased."
 
+        event_message = self.maybe_trigger_world_event()
+        debbie_message = self.maybe_get_debbie_complaint()
+
         self.hero.tick_pan_buffs()
+        self.hero.recalculate_stats()
+
+        full_message = (
+            f"You found: {loot_name} worth ${final_value}."
+            f"{class_note}{buff_note}{companion_note}"
+)
+
+        if event_message:
+            full_message += f"\n\nWORLD EVENT: {event_message}"
+
+        if debbie_message:
+            full_message += f"\n\n{debbie_message}"
 
         return {
             "success": True,
-            "message": (
-                f"You found: {loot_name} worth ${final_value}."
-                f"{class_note}{buff_note}{companion_note}"
-            ),
+            "message": full_message,
             "loot": (loot_name, final_value)
-        }
+}
 
     def sell_inventory(self):
         if self.hero is None:
@@ -353,43 +455,34 @@ class Game:
 
         self.hero.rest()
         self.day += 1
+        self.hero.cash -= self.daily_expense
 
+        weekly_note = ""
         if self.day % GAME_BALANCE["weekly_day_interval"] == 0:
             self.bail_target += GAME_BALANCE["weekly_bail_increase"]
+            weekly_note = (
+                f"\n\nCletus caused more trouble from inside. "
+                f"Bail increased by ${GAME_BALANCE['weekly_bail_increase']}."
+            )
 
-            flavor_events = [
-                "Cletus tried to bribe a guard with a stick of gum. Bail increased.",
-                "Cletus was caught brewing toilet wine. Bail increased.",
-                "Cletus attempted to start a band in holding. Bail increased.",
-                "Cletus tried sneaking in scented markers. Bail increased."
-    ]
+        self.check_fail_state()
 
-            event = random.choice(flavor_events)
-
-            return {
-                "success": True,
-                "message": (
-                    f"{event} Bail increased by ${GAME_BALANCE['weekly_bail_increase']}.\n"
-                    f"New Bail: ${self.bail_target}"
-        )
-    }
-        self.hero.cash -= self.daily_expense
-        self.check_win_loss()
-
-        if self.game_over and not self.game_won:
+        if self.game_over:
             return {
                 "success": False,
                 "message": (
-                    f"Day {self.day} begins, but the bills keep stacking up. "
-                    f"You are broke beyond reason. Cletus remains jailed."
+                    f"Day {self.day} begins, but the bills keep stacking up."
+                    f"\nYou are broke beyond reason."
+                    f"\nCletus remains jailed."
                 )
             }
 
         return {
             "success": True,
             "message": (
-                f"You rest for the night. Day {self.day} begins. "
-                f"Daily expenses hit for ${self.daily_expense}."
+                f"You rest for the night. Day {self.day} begins."
+                f"\nDaily expenses hit for ${self.daily_expense}."
+                f"{weekly_note}"
             )
         }
 
@@ -401,7 +494,8 @@ class Game:
             return {"success": False, "message": "The game is over. Start a new run to continue."}
 
         item = None
-        for shop_item in SHOP_ITEMS[category]:
+
+        for shop_item in self.get_available_shop_items(category):
             if shop_item["name"] == item_name:
                 item = shop_item
                 break
@@ -652,3 +746,76 @@ class Game:
                 return name, value
 
         return "Mud", 0
+    
+    def maybe_trigger_world_event(self):
+        if self.hero is None or self.game_over:
+            return None
+
+        if random.random() >= WORLD_EVENT_SETTINGS["pan_event_chance"]:
+            return None
+
+        event = random.choice(WORLD_EVENTS)
+        hero = self.hero
+
+        if event["type"] == "stamina_zero":
+            hero.stamina = 0
+            return event["description"]
+
+        if event["type"] == "luck_buff":
+            hero.temp_luck_bonus += event["value"]
+            hero.temp_luck_turns = max(hero.temp_luck_turns, event["duration"])
+            hero.recalculate_stats()
+            return event["description"]
+
+        if event["type"] == "full_stamina":
+            hero.stamina = hero.max_stamina
+            return event["description"]
+
+        if event["type"] == "stamina_loss":
+            hero.stamina = max(0, hero.stamina - event["value"])
+            return event["description"]
+
+        if event["type"] == "next_sale_buff":
+            hero.next_sale_bonus += event["value"]
+            return event["description"]
+
+        if event["type"] == "lose_random_cooler_item":
+            if hero.cooler_consumables:
+                stolen_item = random.choice(hero.cooler_consumables)
+                hero.cooler_consumables.remove(stolen_item)
+                hero.recalculate_stats()
+                return f"{event['description']} The crow got away with your {stolen_item['name']}."
+            return "A crow swoops down to steal from you, but your cooler is already empty."
+
+        if event["type"] == "luck_penalty":
+            hero.temp_luck_bonus -= event["value"]
+            hero.temp_luck_turns = max(hero.temp_luck_turns, event["duration"])
+            hero.recalculate_stats()
+            return event["description"]
+
+        if event["type"] == "cash_bonus":
+            hero.cash += event["value"]
+            self.check_win_loss()
+            return event["description"]
+
+        return None
+
+
+    def maybe_get_debbie_complaint(self):
+        if self.hero is None:
+            return None
+
+        honey = self.hero.equipped_honey
+        if honey is None:
+            return None
+
+        if honey["name"] != "Debbie Downstream":
+            return None
+
+        if not self.hero.honey_is_active():
+            return None
+
+        if random.random() < 0.30:
+            return f'Debbie Downstream grumbles: "{random.choice(DEBBIE_COMPLAINTS)}"'
+
+        return None

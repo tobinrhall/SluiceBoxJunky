@@ -14,48 +14,152 @@ GAME_STORY = {
     )
 }
 
-GAME_BALANCE = {
-    "starting_bail": 18000,   # 👈 bumped up
-    "daily_expense": 35,      # slightly harsher economy
-    "weekly_bail_increase": 1000,
+GAME_BALANCE = {  
+    "daily_expense": 25,      
+    "weekly_bail_increase": 200,
     "weekly_day_interval": 7
 }
 
+BAIL_STAGES = [
+    2000,
+    4000,
+    6500,
+    9000,
+    12000,
+    16000,
+    20000,
+]
+
+RIVER_UNLOCK_ORDER = [
+    "Nooksack River",
+    "Frozen Creek",
+    "The Swamp",
+    "Mississippi River",
+    "Abandoned Mine Runoff",
+]
+
+CLETUS_REARREST_EVENTS = [
+    "You bailed Cletus out, but he was arrested again after trying to use a riding mower as a fishing vessel.",
+    "Cletus learned a new river spot from an inmate named Fishhook Darryl before getting arrested again behind a bait shop.",
+    "Cletus traded jail pudding for directions to a better panning location, then got locked up again for public indecency.",
+    "Cletus gave a guard an all-access pass to his body and somehow came back with directions to a new river.",
+    "You got Cletus out for six whole hours before he was arrested again for trying to sell counterfeit medicinal crystals at a gas station.",
+    "Cletus overheard two old-timers in lockup talking about a rich runoff spot, then immediately caught another charge.",
+    "Cletus got arrested again after threatening a jukebox with a tire iron, but not before learning about a new panning spot.",
+]
+
+WORLD_EVENT_SETTINGS = {
+    "pan_event_chance": 0.04
+}
+
+WORLD_EVENTS = [
+    {
+        "name": "Fall Into Water",
+        "type": "stamina_zero",
+        "description": "You slip on a mossy rock and plunge straight into the water. Your day is ruined."
+    },
+    {
+        "name": "Eagle Blessing",
+        "type": "luck_buff",
+        "value": 10,
+        "duration": 5,
+        "description": "An eagle circles overhead like a divine sign. +10 luck for the next 5 pans."
+    },
+    {
+        "name": "Mysterious Herb",
+        "type": "full_stamina",
+        "description": "You chew a mysterious herb from the riverbank. Against all reason, it fully restores your stamina."
+    },
+    {
+        "name": "Panner Ambush",
+        "type": "stamina_loss",
+        "value": 25,
+        "description": "Another panner claims you're on his turf and jumps you. Lose 25 stamina."
+    },
+    {
+        "name": "Pawn Ticket",
+        "type": "next_sale_buff",
+        "value": 0.15,
+        "description": "You find a crumpled pawn ticket in the mud. Next sale gets +15% value."
+    },
+    {
+        "name": "Crow Theft",
+        "type": "lose_random_cooler_item",
+        "description": "A crow swoops in and steals something from your cooler."
+    },
+    {
+        "name": "Mosquito Swarm",
+        "type": "luck_penalty",
+        "value": 5,
+        "duration": 3,
+        "description": "A black cloud of mosquitoes descends on you. -5 luck for the next 3 pans."
+    },
+    {
+        "name": "Buried Cash Tin",
+        "type": "cash_bonus",
+        "value": 35,
+        "description": "You dig up an old tobacco tin with a few soggy bills inside. Gain $35 cash."
+    }
+]
+
+DEBBIE_COMPLAINTS = [
+    "Suga, can we go home yet?",
+    "My bunions are acting up again.",
+    "Do you have a torch, baby? Mama needs her torch.",
+    "I hate the wilderness.",
+    "Can this get any more boring?",
+    "I forgot to feed my 3 kids this morning.",
+    "That's the last time I use a lightbulb.",
+    "My needle marks are really itchy today.",
+    "I'm bored.",
+    "We should take that sluice box apart and sell it for scrap.",
+    "Both of my teeth are hurting.",
+    "If I see one more mosquito, I'm filing a complaint.",
+    "You call this prospecting? I call this loitering with mud.",
+    "I ain't built for nature. I'm built for indoor disappointment.",
+    "If I die out here, sell my shoes."
+]
+
 CLASSES = {
-    "River Rat": {
-        "description": "Tough and tireless. Starts with extra stamina.",
-        "max_stamina_bonus": 25,
-        "luck_bonus": 0,
+    "Greenhorn": {
+        "luck_bonus": 2,
+        "max_stamina_bonus": 10,
         "sell_bonus": 0.00,
-        "chaos": False
+        "chaos": False,
+        "description": "New to the game, but eager and optimistic.",
+        "image": "assets/classes/greenhorn.png"
     },
-    "Prospector": {
-        "description": "Knows where the good stuff hides. Better luck.",
-        "max_stamina_bonus": 0,
-        "luck_bonus": 8,
+    "Tracker": {
+        "luck_bonus": 3,
+        "max_stamina_bonus": 5,
         "sell_bonus": 0.00,
-        "chaos": False
+        "chaos": False,
+        "description": "Knows the land and follows the signs.",
+        "image": "assets/classes/tracker.png"
     },
-    "Hustler": {
-        "description": "Can talk a fish into buying water. Better gold value.",
-        "max_stamina_bonus": 0,
-        "luck_bonus": 0,
-        "sell_bonus": 0.15,
-        "chaos": False
+    "Hillbilly": {
+        "luck_bonus": 1,
+        "max_stamina_bonus": 20,
+        "sell_bonus": 0.05,
+        "chaos": False,
+        "description": "Rough, tough, and built for the grind.",
+        "image": "assets/classes/hillbilly.png"
     },
-    "Washed-Up Legend": {
-        "description": "A mystery wrapped in river mud. Random bonuses each pan.",
-        "max_stamina_bonus": 0,
-        "luck_bonus": 0,
+    "Mad Miner": {
+        "luck_bonus": 5,
+        "max_stamina_bonus": -5,
         "sell_bonus": 0.00,
-        "chaos": True
+        "chaos": True,
+        "description": "Unstable, unpredictable, but hits big.",
+        "image": "assets/classes/mad_miner.png"
     }
 }
 
 LOCATIONS = {
     "Nooksack River": {
         "stamina_cost": 10,
-        "flavor": "Cold water, steady current, and honest dirt.",
+        "image": "assets/rivers/nooksack.png",
+        "description": "Cold, fast, and full of promise.",
         "loot_table": [
             ("Mud", 0, 30),
             ("Tiny Fleck", 5, 30),
@@ -65,21 +169,23 @@ LOCATIONS = {
             ("Nugget", 75, 2),
         ]
     },
-    "Mississippi River": {
-        "stamina_cost": 12,
-        "flavor": "Big water, big sediment, and plenty of junk.",
+    "Frozen Creek": {
+        "stamina_cost": 8,
+        "image": "assets/rivers/frozen_creek.png",
+        "description": "Hard ground, better rewards.",
         "loot_table": [
-            ("Mud", 0, 35),
-            ("Tiny Fleck", 4, 28),
-            ("Small Flake", 9, 18),
-            ("Pebble", 18, 11),
-            ("Chunk", 35, 6),
-            ("Nugget", 65, 2),
+            ("Mud", 0, 28),
+            ("Tiny Fleck", 5, 25),
+            ("Small Flake", 11, 22),
+            ("Pebble", 22, 14),
+            ("Chunk", 42, 8),
+            ("Nugget", 80, 3),
         ]
     },
     "The Swamp": {
         "stamina_cost": 14,
-        "flavor": "Mosquitoes, mystery, and suspicious bubbling.",
+        "image": "assets/rivers/swamp.png",
+        "description": "Smells awful, pays decent.",
         "loot_table": [
             ("Mud", 0, 25),
             ("Tiny Fleck", 6, 24),
@@ -90,9 +196,24 @@ LOCATIONS = {
             ("Legendary Boot", 1, 2),
         ]
     },
+    "Mississippi River": {
+        "stamina_cost": 12,
+        "image": "assets/rivers/mississippi.png",
+        "description": "Wide, muddy, and unpredictable.",
+        "loot_table": [
+            ("Mud", 0, 35),
+            ("Dust",3, 10),
+            ("Tiny Fleck", 4, 28),
+            ("Small Flake", 9, 18),
+            ("Pebble", 18, 11),
+            ("Chunk", 35, 6),
+            ("Nugget", 65, 2),
+        ]
+    },
     "Abandoned Mine Runoff": {
         "stamina_cost": 16,
-        "flavor": "Dangerous, ugly, and maybe worth it.",
+        "image": "assets/rivers/mine_runoff.png",
+        "description": "Dangerous waters, big payouts.",
         "loot_table": [
             ("Mud", 0, 22),
             ("Tiny Fleck", 7, 20),
@@ -102,45 +223,36 @@ LOCATIONS = {
             ("Nugget", 110, 7),
             ("Heavy Nugget", 150, 3),
         ]
-    },
-    "Frozen Creek": {
-        "stamina_cost": 8,
-        "flavor": "Easy pace, numb fingers, decent odds.",
-        "loot_table": [
-            ("Mud", 0, 28),
-            ("Tiny Fleck", 5, 25),
-            ("Small Flake", 11, 22),
-            ("Pebble", 22, 14),
-            ("Chunk", 42, 8),
-            ("Nugget", 80, 3),
-        ]
     }
 }
-
 SHOP_ITEMS = {
     "Pans": [
         {
             "name": "Rusty Pan",
             "cost": 0,
             "luck_bonus": 0,
+            "required_stage": 1,
             "description": "Barely holds dirt, but it works."
         },
         {
             "name": "Copper Pan",
             "cost": 75,
             "luck_bonus": 3,
+            "required_stage": 1,
             "description": "A little cleaner, a little luckier."
         },
         {
             "name": "Prospector's Pan",
             "cost": 175,
             "luck_bonus": 6,
+            "required_stage": 2,
             "description": "A respectable pan for serious mud enjoyers."
         },
         {
             "name": "Lucky Strike Pan",
             "cost": 350,
             "luck_bonus": 10,
+            "required_stage": 4,
             "description": "Feels heavy with destiny."
         }
     ],
@@ -149,24 +261,28 @@ SHOP_ITEMS = {
             "name": "Old Bucket",
             "cost": 0,
             "capacity_bonus": 0,
+            "required_stage": 1,
             "description": "Leaky, dented, loyal."
         },
         {
             "name": "Supply Sack",
             "cost": 60,
             "capacity_bonus": 3,
+            "required_stage": 1,
             "description": "A little more room for your river treasures."
         },
         {
             "name": "Mule Crate",
             "cost": 140,
             "capacity_bonus": 6,
+            "required_stage": 2,
             "description": "Carry more, complain less."
         },
         {
             "name": "Hoarder's Chest",
             "cost": 275,
             "capacity_bonus": 10,
+            "required_stage": 4,
             "description": "Now you're thinking like a true junky."
         }
     ],
@@ -175,24 +291,28 @@ SHOP_ITEMS = {
             "name": "Wet Sneakers",
             "cost": 0,
             "stamina_reduction": 0,
+            "required_stage": 1,
             "description": "Terrible idea, honestly."
         },
         {
             "name": "Rubber Boots",
             "cost": 80,
             "stamina_reduction": 1,
+            "required_stage": 1,
             "description": "Keeps your feet dry-ish."
         },
         {
             "name": "Hip Waders",
             "cost": 180,
             "stamina_reduction": 2,
+            "required_stage": 3,
             "description": "Less suffering per scoop."
         },
         {
             "name": "River Warden Waders",
             "cost": 320,
             "stamina_reduction": 3,
+            "required_stage": 5,
             "description": "Stride into the current like a legend."
         }
     ],
@@ -201,24 +321,28 @@ SHOP_ITEMS = {
             "name": "Lunch Cooler",
             "cost": 0,
             "consumable_slots": 2,
-            "description": "One sad drink and a dream."
+            "required_stage": 1,
+            "description": "A beat-up little cooler with just enough room for poor planning."
         },
         {
             "name": "Cheap Foam Cooler",
             "cost": 70,
             "consumable_slots": 2,
+            "required_stage": 1,
             "description": "Barely insulated, but technically useful."
         },
         {
             "name": "River Cooler",
             "cost": 155,
             "consumable_slots": 4,
+            "required_stage": 3,
             "description": "Enough room for a proper bad decision."
         },
         {
             "name": "Party Barge Cooler",
             "cost": 295,
             "consumable_slots": 8,
+            "required_stage": 5,
             "description": "Now you're provisioning like a champion."
         }
     ]
