@@ -232,6 +232,7 @@ SHOP_ITEMS = {
             "cost": 0,
             "luck_bonus": 0,
             "required_stage": 1,
+            "image": "assets/shop/pans/rusty_pan.png",
             "description": "Barely holds dirt, but it works."
         },
         {
@@ -239,6 +240,7 @@ SHOP_ITEMS = {
             "cost": 75,
             "luck_bonus": 3,
             "required_stage": 1,
+            "image": "assets/shop/pans/copper_pan.png",
             "description": "A little cleaner, a little luckier."
         },
         {
@@ -246,13 +248,15 @@ SHOP_ITEMS = {
             "cost": 175,
             "luck_bonus": 6,
             "required_stage": 2,
+            "image": "assets/shop/pans/prospectors_pan.png",
             "description": "A respectable pan for serious mud enjoyers."
         },
         {
             "name": "Lucky Strike Pan",
             "cost": 350,
             "luck_bonus": 10,
-            "required_stage": 4,
+            "required_stage": 3,
+            "image": "assets/shop/pans/lucky_strike_pan.png",
             "description": "Feels heavy with destiny."
         }
     ],
@@ -262,6 +266,7 @@ SHOP_ITEMS = {
             "cost": 0,
             "capacity_bonus": 0,
             "required_stage": 1,
+            "image": "assets/shop/containers/old_bucket.png",
             "description": "Leaky, dented, loyal."
         },
         {
@@ -269,6 +274,7 @@ SHOP_ITEMS = {
             "cost": 60,
             "capacity_bonus": 3,
             "required_stage": 1,
+            "image": "assets/shop/containers/supply_sack.png",
             "description": "A little more room for your river treasures."
         },
         {
@@ -276,13 +282,15 @@ SHOP_ITEMS = {
             "cost": 140,
             "capacity_bonus": 6,
             "required_stage": 2,
+            "image": "assets/shop/containers/mule_crate.png",
             "description": "Carry more, complain less."
         },
         {
             "name": "Hoarder's Chest",
             "cost": 275,
             "capacity_bonus": 10,
-            "required_stage": 4,
+            "required_stage": 3,
+            "image": "assets/shop/containers/hoarders_chest.png",
             "description": "Now you're thinking like a true junky."
         }
     ],
@@ -292,6 +300,7 @@ SHOP_ITEMS = {
             "cost": 0,
             "stamina_reduction": 0,
             "required_stage": 1,
+            "image": "assets/shop/boots/wet_sneakers.png",
             "description": "Terrible idea, honestly."
         },
         {
@@ -299,13 +308,15 @@ SHOP_ITEMS = {
             "cost": 80,
             "stamina_reduction": 1,
             "required_stage": 1,
+            "image": "assets/shop/boots/rubber_boots.png",
             "description": "Keeps your feet dry-ish."
         },
         {
             "name": "Hip Waders",
             "cost": 180,
             "stamina_reduction": 2,
-            "required_stage": 3,
+            "required_stage": 2,
+            "image": "assets/shop/boots/hip_waders.png",
             "description": "Less suffering per scoop."
         },
         {
@@ -313,6 +324,7 @@ SHOP_ITEMS = {
             "cost": 320,
             "stamina_reduction": 3,
             "required_stage": 5,
+            "image": "assets/shop/boots/river_wardens_waders.png",
             "description": "Stride into the current like a legend."
         }
     ],
@@ -322,27 +334,31 @@ SHOP_ITEMS = {
             "cost": 0,
             "consumable_slots": 2,
             "required_stage": 1,
+            "image": "assets/shop/coolers/lunch_cooler.png",
             "description": "A beat-up little cooler with just enough room for poor planning."
         },
         {
             "name": "Cheap Foam Cooler",
             "cost": 70,
-            "consumable_slots": 2,
+            "consumable_slots": 3,
             "required_stage": 1,
+            "image": "assets/shop/coolers/cheap_foam_cooler.png",
             "description": "Barely insulated, but technically useful."
         },
         {
             "name": "River Cooler",
             "cost": 155,
             "consumable_slots": 4,
-            "required_stage": 3,
+            "required_stage": 2,
+            "image": "assets/shop/coolers/river_cooler.png",
             "description": "Enough room for a proper bad decision."
         },
         {
             "name": "Party Barge Cooler",
             "cost": 295,
             "consumable_slots": 8,
-            "required_stage": 5,
+            "required_stage": 3,
+            "image": "assets/shop/coolers/party_barge_cooler.png",
             "description": "Now you're provisioning like a champion."
         }
     ]
@@ -403,6 +419,7 @@ COMPANIONS = [
         "capacity_bonus": 0,
         "sell_bonus": 0.00,
         "stamina_reduction": 0,
+        "image": "assets/companions/chicken.png",
         "description": "Pecks at the dirt like it knows something."
     },
     {
@@ -412,6 +429,7 @@ COMPANIONS = [
         "capacity_bonus": 2,
         "sell_bonus": 0.00,
         "stamina_reduction": 0,
+        "image": "assets/companions/ferret.png",
         "description": "Slim, chaotic, and weirdly helpful."
     },
     {
@@ -421,6 +439,7 @@ COMPANIONS = [
         "capacity_bonus": 0,
         "sell_bonus": 0.08,
         "stamina_reduction": 0,
+        "image": "assets/companions/raccoon.png",
         "description": "Understands trash and negotiations equally well."
     },
     {
@@ -430,6 +449,7 @@ COMPANIONS = [
         "capacity_bonus": 0,
         "sell_bonus": 0.00,
         "stamina_reduction": 1,
+        "image": "assets/companions/swamp_possum.png",
         "description": "Too mean to get tired."
     },
     {
@@ -439,6 +459,7 @@ COMPANIONS = [
         "capacity_bonus": 1,
         "sell_bonus": 0.00,
         "stamina_reduction": 0,
+        "image": "assets/companions/lynx.png",
         "description": "Silent, expensive, and probably judging you."
     }
 ]

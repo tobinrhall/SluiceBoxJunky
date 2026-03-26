@@ -460,47 +460,70 @@ class SluiceBoxJunkyApp:
         right = ttk.Frame(parent)
         right.pack(side="left", fill="both", expand=True)
 
-        info_frame = ttk.Frame(left)
-        info_frame.pack(fill="x", pady=5)
+        # =========================
+        # Card grid
+        # =========================
+        cards_grid = ttk.Frame(left)
+        cards_grid.pack(fill="x", pady=5)
 
-        self.hero_label = ttk.Label(info_frame, text="")
+        progress_frame = ttk.LabelFrame(left, text="Run Progress", padding=10)
+        progress_frame.pack(fill="x", pady=(5, 5))
+
+        self.progress_label = ttk.Label(
+            progress_frame,
+            text="",
+            justify="left",
+            wraplength=600
+        )
+        self.progress_label.pack(anchor="w")
+
+        cards_grid.columnconfigure(0, weight=1)
+        cards_grid.columnconfigure(1, weight=1)
+
+        # -------------------------
+        # Hero Card
+        # -------------------------
+        hero_card = ttk.LabelFrame(cards_grid, text="Hero", padding=10)
+        hero_card.grid(row=0, column=0, sticky="nsew", padx=(0, 5), pady=(0, 5))
+
+        hero_inner = ttk.Frame(hero_card)
+        hero_inner.pack(fill="both", expand=True)
+
+        hero_text_frame = ttk.Frame(hero_inner)
+        hero_text_frame.pack(side="left", fill="both", expand=True, padx=(0, 10))
+
+        hero_image_frame = ttk.Frame(hero_inner)
+        hero_image_frame.pack(side="right", anchor="n")
+
+        self.hero_label = ttk.Label(hero_text_frame, text="", font=("Arial", 12, "bold"))
         self.hero_label.pack(anchor="w")
 
-        self.class_label = ttk.Label(info_frame, text="")
-        self.class_label.pack(anchor="w")
+        self.class_label = ttk.Label(hero_text_frame, text="")
+        self.class_label.pack(anchor="w", pady=(2, 0))
 
-        self.day_label = ttk.Label(info_frame, text="")
-        self.day_label.pack(anchor="w")
+        self.day_label = ttk.Label(hero_text_frame, text="")
+        self.day_label.pack(anchor="w", pady=(2, 0))
 
-        self.location_label = ttk.Label(info_frame, text="")
-        self.location_label.pack(anchor="w")
+        self.stamina_label = ttk.Label(hero_text_frame, text="")
+        self.stamina_label.pack(anchor="w", pady=(6, 0))
 
-        self.location_flavor_label = ttk.Label(info_frame, text="")
-        self.location_flavor_label.pack(anchor="w", pady=(0, 5))
+        self.gold_label = ttk.Label(hero_text_frame, text="")
+        self.gold_label.pack(anchor="w", pady=(2, 0))
 
-        self.current_river_image_label = ttk.Label(info_frame, text="[River Image]")
-        self.current_river_image_label.pack(anchor="w", pady=(5, 10))
+        self.inventory_label = ttk.Label(hero_text_frame, text="")
+        self.inventory_label.pack(anchor="w", pady=(2, 0))
 
-        self.stamina_label = ttk.Label(info_frame, text="")
-        self.stamina_label.pack(anchor="w")
+        self.equipment_label = ttk.Label(hero_text_frame, text="", justify="left", wraplength=180)
+        self.equipment_label.pack(anchor="w", pady=(6, 0))
 
-        self.gold_label = ttk.Label(info_frame, text="")
-        self.gold_label.pack(anchor="w")
+        self.hero_card_image_label = ttk.Label(hero_image_frame, text="[Hero Image]")
+        self.hero_card_image_label.pack(anchor="ne")
 
-        self.inventory_label = ttk.Label(info_frame, text="")
-        self.inventory_label.pack(anchor="w")
-
-        self.progress_label = ttk.Label(info_frame, text="", justify="left")
-        self.progress_label.pack(anchor="w", pady=(6, 6))
-
-        self.equipment_label = ttk.Label(info_frame, text="", justify="left")
-        self.equipment_label.pack(anchor="w", pady=(8, 8))
-
-        self.buff_label = ttk.Label(info_frame, text="", justify="left")
-        self.buff_label.pack(anchor="w", pady=(0, 10))
-
-        current_spot_frame = ttk.LabelFrame(left, text="Current River", padding=10)
-        current_spot_frame.pack(fill="x", pady=10)
+        # -------------------------
+        # Current River Card
+        # -------------------------
+        current_spot_frame = ttk.LabelFrame(cards_grid, text="Current River", padding=10)
+        current_spot_frame.grid(row=0, column=1, sticky="nsew", padx=(5, 0), pady=(0, 5))
 
         ttk.Label(
             current_spot_frame,
@@ -508,8 +531,86 @@ class SluiceBoxJunkyApp:
             font=("Arial", 12, "bold")
         ).pack(anchor="w")
 
+        self.location_label = ttk.Label(current_spot_frame, text="", wraplength=300, justify="left")
+        self.location_label.pack(anchor="w", pady=(6, 0))
+
+        self.location_flavor_label = ttk.Label(
+            current_spot_frame,
+            text="",
+            wraplength=300,
+            justify="left"
+        )
+        self.location_flavor_label.pack(anchor="w", pady=(4, 0))
+
+        self.current_river_image_label = ttk.Label(current_spot_frame, text="[River Image]")
+        self.current_river_image_label.pack(anchor="w", pady=(8, 0))
+
+        # -------------------------
+        # Honey Card
+        # -------------------------
+        honey_card = ttk.LabelFrame(cards_grid, text="Current Honey", padding=10)
+        honey_card.grid(row=1, column=0, sticky="nsew", padx=(0, 5), pady=(5, 0))
+
+        honey_inner = ttk.Frame(honey_card)
+        honey_inner.pack(fill="both", expand=True)
+
+        honey_text_frame = ttk.Frame(honey_inner)
+        honey_text_frame.pack(side="left", fill="both", expand=True, padx=(0, 10))
+
+        honey_image_frame = ttk.Frame(honey_inner)
+        honey_image_frame.pack(side="right", anchor="n")
+
+        self.buff_label = ttk.Label(
+            honey_text_frame,
+            text="",
+            justify="left",
+            wraplength=180
+        )
+        self.buff_label.pack(anchor="w", pady=(0, 8))
+
+        self.honey_card_flavor_label = ttk.Label(
+            honey_text_frame,
+            text="No honey equipped.",
+            justify="left",
+            wraplength=180
+        )
+        self.honey_card_flavor_label.pack(anchor="w")
+
+        self.honey_card_image_label = ttk.Label(honey_image_frame, text="[Honey Image]")
+        self.honey_card_image_label.pack(anchor="ne")
+        # -------------------------
+        # Companion Card
+        # -------------------------
+        companion_card = ttk.LabelFrame(cards_grid, text="Current Companion", padding=10)
+        companion_card.grid(row=1, column=1, sticky="nsew", padx=(5, 0), pady=(5, 0))
+
+        companion_inner = ttk.Frame(companion_card)
+        companion_inner.pack(fill="both", expand=True)
+
+        companion_text_frame = ttk.Frame(companion_inner)
+        companion_text_frame.pack(side="left", fill="both", expand=True, padx=(0, 10))
+
+        companion_image_frame = ttk.Frame(companion_inner)
+        companion_image_frame.pack(side="right", anchor="n")
+
+        self.companion_card_label = ttk.Label(
+            companion_text_frame,
+            text="No companion equipped.",
+            justify="left",
+            wraplength=180
+        )
+        self.companion_card_label.pack(anchor="w")
+
+        self.companion_card_image_label = ttk.Label(
+            companion_image_frame,
+            text="[Companion Image]"
+        )
+        self.companion_card_image_label.pack(anchor="ne")
+        # =========================
+        # Action buttons
+        # =========================
         button_frame = ttk.Frame(left)
-        button_frame.pack(pady=10)
+        button_frame.pack(pady=10, fill="x")
 
         self.pan_button = ttk.Button(button_frame, text="Pan for Gold", command=self.start_pan)
         self.pan_button.pack(side="left", padx=5)
@@ -527,21 +628,30 @@ class SluiceBoxJunkyApp:
         )
         self.pay_bail_button.pack(side="left", padx=5)
 
+        # =========================
+        # Result text
+        # =========================
         self.result_label = ttk.Label(
             left,
             text="The river awaits...",
             font=("Arial", 11),
             justify="left",
             wraplength=600
-)
+        )
         self.result_label.pack(pady=10, anchor="w")
 
+        # =========================
+        # Loot log
+        # =========================
         log_frame = ttk.LabelFrame(left, text="Loot Log", padding=10)
         log_frame.pack(fill="both", expand=True)
 
         self.loot_log = tk.Text(log_frame, height=18, state="disabled", wrap="word")
         self.loot_log.pack(fill="both", expand=True)
 
+        # =========================
+        # Right side panels
+        # =========================
         river_right_top = ttk.LabelFrame(right, text="Current Loot Bag", padding=10)
         river_right_top.pack(fill="both", expand=True, pady=(0, 10))
 
@@ -652,28 +762,102 @@ class SluiceBoxJunkyApp:
             cat_frame.pack(fill="x", pady=6)
 
             for item in items:
-                line = self.format_store_item_text(category, item)
+                if category in {"Pans", "Containers", "Boots", "Coolers"}:
+                    card = ttk.Frame(cat_frame, relief="ridge", padding=10)
+                    card.pack(fill="x", pady=6)
 
-                ttk.Label(cat_frame, text=line, justify="left").pack(anchor="w")
-                ttk.Button(
-                    cat_frame,
-                    text=f"Buy / Equip {item['name']}",
-                    command=lambda c=category, n=item["name"]: self.buy_shop_item(c, n)
-                ).pack(anchor="w", pady=(0, 6))
+                    card_text = ttk.Frame(card)
+                    card_text.pack(side="left", fill="both", expand=True, padx=(0, 10))
+
+                    card_image = ttk.Frame(card)
+                    card_image.pack(side="right", anchor="n")
+
+                    line = self.format_store_item_text(category, item)
+
+                    ttk.Label(
+                        card_text,
+                        text=line,
+                        justify="left",
+                        wraplength=220
+                    ).pack(anchor="w")
+
+                    ttk.Button(
+                        card_text,
+                        text=f"Buy / Equip {item['name']}",
+                        command=lambda c=category, n=item["name"]: self.buy_shop_item(c, n)
+                    ).pack(anchor="w", pady=(8, 0))
+
+                    pan_img = self.load_tk_image(
+                        item.get("image", "assets/gear/placeholder.png"),
+                        size=(120, 120)
+                    )
+
+                    if pan_img is not None:
+                        self.image_refs[f"store_{category}_{item['name']}"] = pan_img
+                        ttk.Label(card_image, image=pan_img).pack(anchor="ne")
+                    else:
+                        ttk.Label(card_image, text="[No Image]").pack(anchor="ne")
+
+                else:
+                    line = self.format_store_item_text(category, item)
+
+                    ttk.Label(cat_frame, text=line, justify="left").pack(anchor="w")
+                    ttk.Button(
+                        cat_frame,
+                        text=f"Buy / Equip {item['name']}",
+                        command=lambda c=category, n=item["name"]: self.buy_shop_item(c, n)
+                    ).pack(anchor="w", pady=(0, 6))
 
         for category, items in right_categories:
             cat_frame = ttk.LabelFrame(gear_inner_right, text=category, padding=8)
             cat_frame.pack(fill="x", pady=6)
 
             for item in items:
-                line = self.format_store_item_text(category, item)
+                if category in {"Pans", "Containers", "Boots", "Coolers"}:
+                    card = ttk.Frame(cat_frame, relief="ridge", padding=10)
+                    card.pack(fill="x", pady=6)
 
-                ttk.Label(cat_frame, text=line, justify="left").pack(anchor="w")
-                ttk.Button(
-                    cat_frame,
-                    text=f"Buy / Equip {item['name']}",
-                    command=lambda c=category, n=item["name"]: self.buy_shop_item(c, n)
-                ).pack(anchor="w", pady=(0, 6))
+                    card_text = ttk.Frame(card)
+                    card_text.pack(side="left", fill="both", expand=True, padx=(0, 10))
+
+                    card_image = ttk.Frame(card)
+                    card_image.pack(side="right", anchor="n")
+
+                    line = self.format_store_item_text(category, item)
+
+                    ttk.Label(
+                        card_text,
+                        text=line,
+                        justify="left",
+                        wraplength=220
+                    ).pack(anchor="w")
+
+                    ttk.Button(
+                        card_text,
+                        text=f"Buy / Equip {item['name']}",
+                        command=lambda c=category, n=item["name"]: self.buy_shop_item(c, n)
+                    ).pack(anchor="w", pady=(8, 0))
+
+                    gear_img = self.load_tk_image(
+                        item.get("image", "assets/gear/placeholder.png"),
+                        size=(120, 120)
+                    )
+
+                    if gear_img is not None:
+                        self.image_refs[f"store_{category}_{item['name']}"] = gear_img
+                        ttk.Label(card_image, image=gear_img).pack(anchor="ne")
+                    else:
+                        ttk.Label(card_image, text="[No Image]").pack(anchor="ne")
+
+                else:
+                    line = self.format_store_item_text(category, item)
+
+                    ttk.Label(cat_frame, text=line, justify="left").pack(anchor="w")
+                    ttk.Button(
+                        cat_frame,
+                        text=f"Buy / Equip {item['name']}",
+                        command=lambda c=category, n=item["name"]: self.buy_shop_item(c, n)
+                    ).pack(anchor="w", pady=(0, 6))
 
         general_store_frame = ttk.LabelFrame(middle, text="Gas Station / Pawn Counter", padding=10)
         general_store_frame.pack(fill="both", expand=True)
@@ -703,17 +887,44 @@ class SluiceBoxJunkyApp:
 
             bonus_text = ", ".join(bonus_parts) if bonus_parts else "No bonuses"
 
-            line = (
+            card = ttk.Frame(companion_store_frame, relief="ridge", padding=10)
+            card.pack(fill="x", pady=6)
+
+            card_text = ttk.Frame(card)
+            card_text.pack(side="left", fill="both", expand=True, padx=(0, 10))
+
+            card_image = ttk.Frame(card)
+            card_image.pack(side="right", anchor="n")
+
+            companion_line = (
                 f"{companion['name']} - ${companion['cost']}\n"
                 f"{companion['description']}\n"
                 f"Bonuses: {bonus_text}"
             )
-            ttk.Label(companion_store_frame, text=line, justify="left").pack(anchor="w")
+
+            ttk.Label(
+                card_text,
+                text=companion_line,
+                justify="left",
+                wraplength=220
+            ).pack(anchor="w")
+
             ttk.Button(
-                companion_store_frame,
+                card_text,
                 text=f"Buy / Equip {companion['name']}",
                 command=lambda n=companion["name"]: self.buy_companion(n)
-            ).pack(anchor="w", pady=(0, 8))
+            ).pack(anchor="w", pady=(8, 0))
+
+            companion_img = self.load_tk_image(
+                companion.get("image", "assets/companions/placeholder.png"),
+                size=(120, 120)
+            )
+
+            if companion_img is not None:
+                self.image_refs[f"store_companion_{companion['name']}"] = companion_img
+                ttk.Label(card_image, image=companion_img).pack(anchor="ne")
+            else:
+                ttk.Label(card_image, text="[No Image]").pack(anchor="ne")
 
         self.store_status_label = ttk.Label(parent, text="")
         self.store_status_label.grid(row=1, column=0, columnspan=3, sticky="ew", pady=(10, 0))
@@ -823,6 +1034,15 @@ class SluiceBoxJunkyApp:
         location_data = self.game.get_location_data()
         bail_remaining = self.game.get_bail_remaining()
 
+        hero_image_path = CLASSES.get(hero.hero_class, {}).get("image", "assets/heroes/placeholder.png")
+        hero_image = self.load_tk_image(hero_image_path, size=(240, 240))
+
+        if hero_image is not None:
+            self.image_refs["panning_hero"] = hero_image
+            self.hero_card_image_label.config(image=hero_image, text="")
+        else:
+            self.hero_card_image_label.config(image="", text="[No Hero Image]")
+
         self.hero_label.config(text=f"Hero: {hero.name}")
         self.class_label.config(text=f"Class: {hero.hero_class}")
         self.day_label.config(text=f"Day: {self.game.day}")
@@ -834,7 +1054,7 @@ class SluiceBoxJunkyApp:
         )
         river_image = self.load_tk_image(
             location_data.get("image", "assets/rivers/placeholder.png"),
-            size=(280, 170)
+            size=(280, 280)
         )
 
         if river_image is not None:
@@ -876,6 +1096,7 @@ class SluiceBoxJunkyApp:
             if hero.equipped_companion is not None
             else "None"
         )
+        
 
         self.equipment_label.config(
             text=(
@@ -907,6 +1128,62 @@ class SluiceBoxJunkyApp:
                 f"{luck_buff_text}{sale_buff_text}"
             )
         )
+
+        if hero.equipped_honey is not None:
+            honey_image = self.load_tk_image(
+                hero.equipped_honey.get("image", "assets/honeys/placeholder.png"),
+                size=(150, 420)
+            )
+
+            if honey_image is not None:
+                self.image_refs["panning_honey"] = honey_image
+                self.honey_card_image_label.config(image=honey_image, text="")
+            else:
+                self.honey_card_image_label.config(image="", text="[No Honey Image]")
+        else:
+            self.honey_card_image_label.config(image="", text="[No Honey Equipped]")
+
+        if hero.equipped_honey is not None:
+            honey_status = "ACTIVE" if hero.honey_is_active() else "INACTIVE"
+            honey_description = hero.equipped_honey.get("description", "No description.")
+            honey_requirement_text = hero.equipped_honey.get("requirement_text", "No special requirements.")
+
+            self.honey_card_flavor_label.config(
+                text=(
+                    f"Honey: {hero.equipped_honey['name']}\n"
+                    f"Status: {honey_status}\n"
+                    f"{honey_description}\n"
+                    f"{honey_requirement_text}"
+                )
+            )
+        else:
+            self.honey_card_flavor_label.config(text="No honey equipped.")
+
+        if hero.equipped_companion is not None:
+            companion_image = self.load_tk_image(
+                hero.equipped_companion.get("image", "assets/companions/placeholder.png"),
+                size=(240, 240)
+            )
+
+            if companion_image is not None:
+                self.image_refs["panning_companion"] = companion_image
+                self.companion_card_image_label.config(image=companion_image, text="")
+            else:
+                self.companion_card_image_label.config(image="", text="[No Companion Image]")
+        else:
+            self.companion_card_image_label.config(image="", text="[No Companion Equipped]")
+
+        if hero.equipped_companion is not None:
+            companion_description = hero.equipped_companion.get("description", "No companion description.")
+            self.companion_card_label.config(
+                text=(
+                    f"Companion: {hero.equipped_companion['name']}\n"
+                    f"{companion_description}"
+                )
+            )
+        else:
+            self.companion_card_label.config(text="No companion equipped.")
+
 
         self.update_inventory_display()
         self.update_cooler_display()

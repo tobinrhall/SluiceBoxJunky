@@ -32,7 +32,7 @@ class Hero:
         self.class_sell_bonus = class_data["sell_bonus"]
         self.chaos = class_data["chaos"]
 
-        self.cash = 0
+        self.cash = 2000
         self.bail_paid = 0
 
         self.equipped_honey = None
