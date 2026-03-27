@@ -487,5 +487,17 @@ SLUICE_HONEYS = [
         "description": "Negotiates like a pro, drains your will to live.",
         "requirement_text": "No requirements, just constant negativity.",
         "image": "assets/honeys/debbie.png"
-    }
+    },
+    {
+        "name": "Clamydia Claptrap",
+        "cost": 600,
+        "stamina_bonus": 15,
+        "sell_bonus": 0.25,
+        "luck_bonus": 3,
+        "stamina_penalty": 0,
+        "requirements": [],
+        "description": "Crystal medication vacuum. Here for a good time, not a long time.",
+        "requirement_text": "Does not like the sight of food",
+        "image": "assets/honeys/clamydia.png"
+    },
 ]

@@ -83,7 +83,7 @@ class SluiceBoxJunkyApp:
         self.build_character_creation_ui()
 
     
-    def load_tk_image(self, path, size=(180, 300)):
+    def load_tk_image(self, path, size=(240, 240)):
         fallback = "assets/honeys/placeholder.png"
 
         resolved_path = resource_path(path)
@@ -543,7 +543,7 @@ class SluiceBoxJunkyApp:
         self.location_flavor_label.pack(anchor="w", pady=(4, 0))
 
         self.current_river_image_label = ttk.Label(current_spot_frame, text="[River Image]")
-        self.current_river_image_label.pack(anchor="w", pady=(8, 0))
+        self.current_river_image_label.pack(anchor="ne", pady=(8, 0))
 
         # -------------------------
         # Honey Card
@@ -1054,7 +1054,7 @@ class SluiceBoxJunkyApp:
         )
         river_image = self.load_tk_image(
             location_data.get("image", "assets/rivers/placeholder.png"),
-            size=(280, 280)
+            size=(240, 240)
         )
 
         if river_image is not None:
@@ -1132,7 +1132,7 @@ class SluiceBoxJunkyApp:
         if hero.equipped_honey is not None:
             honey_image = self.load_tk_image(
                 hero.equipped_honey.get("image", "assets/honeys/placeholder.png"),
-                size=(150, 420)
+                size=(240, 240)
             )
 
             if honey_image is not None:
